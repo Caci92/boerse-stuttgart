@@ -227,6 +227,43 @@ namespace boerse_qa
 		        Assert.True(results.Count > 0);
 		    }
 		}
+		
+		[Fact]
+		public void Clicking_On_ISIN_Cell_Should_Open_Anleihe_Detail_Page()
+		{
+		    var options = new ChromeOptions();
+		    options.AddArgument("--start-maximized");
+
+		    using (IWebDriver driver = new ChromeDriver(options))
+		    {
+		        driver.Navigate().GoToUrl(
+		            "https://www.boerse-stuttgart.de/de-de/tools/produktsuche/anleihen-finder/"
+		        );
+
+		        var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+		        TryAcceptCookies(wait);
+
+		        var firstRow = wait.Until(d =>
+		            d.FindElements(By.CssSelector("table tbody tr")).First()
+		        );
+
+		        var isinCell = firstRow.FindElements(By.TagName("td")).First();
+		        string isinValue = isinCell.Text.Trim();
+
+		        Assert.False(string.IsNullOrWhiteSpace(isinValue));
+
+		        isinCell.Click();
+
+		        wait.Until(d =>
+		            d.Url.Contains("/produkte/anleihen/")
+		        );
+
+		        Assert.Contains("/produkte/anleihen/", driver.Url);
+
+		        wait.Until(d => d.PageSource.Contains(isinValue));
+		        Assert.Contains(isinValue, driver.PageSource);
+		    }
+		}
 
         private void TryAcceptCookies(WebDriverWait wait)
         {
